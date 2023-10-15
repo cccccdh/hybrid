@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <title>Client</title>
+</head>
+<body>
+    <button id="getDataButton">Get Data</button>
+    <p id="dataDisplay"></p>
+
+    <script>
+        const getDataButton = document.getElementById('getDataButton');
+        const dataDisplay = document.getElementById('dataDisplay');
+
+        getDataButton.addEventListener('click', () => {
+            fetch('/hi')
+                .then(response => response.json())
+                .then(data => {
+                    dataDisplay.innerHTML = `서버에서 받아온 데이터: ${data.message}`;
+                })
+                .catch(error => {
+                    dataDisplay.innerHTML = '데이터 가져오기 실패';
+                    console.error(error);
+                });
+        });
+    </script>
+</body>
+</html>
