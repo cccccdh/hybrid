@@ -1,27 +1,25 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Client</title>
 </head>
 <body>
-    <button id="getDataButton">Get Data</button>
+    <button onclick="getdata()">Get Data</button>
     <p id="dataDisplay"></p>
-
     <script>
-        const getDataButton = document.getElementById('getDataButton');
-        const dataDisplay = document.getElementById('dataDisplay');
-
-        getDataButton.addEventListener('click', () => {
-            fetch('/hi')
-                .then(response => response.json())
+         const dataDisplay = document.getElementById('dataDisplay');
+        function getdata(){
+            fetch("http://localhost:8040/hi")
+                .then(response => response.text())
                 .then(data => {
-                    dataDisplay.innerHTML = `서버에서 받아온 데이터: ${data.message}`;
+                    dataDisplay.innerHTML = `서버에서 받아온 데이터: ${data}`;
                 })
                 .catch(error => {
-                    dataDisplay.innerHTML = '데이터 가져오기 실패';
-                    console.error(error);
+                    console.error("데이터 가져오기 오류 : " +error);
                 });
-        });
+            }
     </script>
 </body>
 </html>
