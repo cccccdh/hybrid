@@ -1,12 +1,12 @@
 const express = require('express');
 const cors = require('cors'); 
 const app = express();
-const port = 3000;
+const port = 8040;
 
 app.use(cors());
 
 app.get('/hi', (req, res) => {
-    res.json({ message: '클라이언트에서 보낸 데이터입니다.' });
+    res.json("클라이언트에서 보낸 데이터입니다.");
 });
 
 app.listen(port, () => {
