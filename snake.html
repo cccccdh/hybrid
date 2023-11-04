@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        #snake{
+            border: 2px solid black;
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+        }
+        #Information{
+            float: left;
+        }
+    </style>
+</head>
+<body>
+    <canvas id = "snake" width = "1024" height="768"></canvas>
+    <div id="Information">
+        <h2>뱀 길이: <span id="scoreDisplay">0</span></h2>
+        <h2>시 간: <span id="timeDisplay">0</span> s</h2>
+    </div>    
+    <script>
+        const canvas = document.getElementById("snake");
+        const ctx = canvas.getContext("2d");
+
+        // 마우스 X위치
+        var mouseX = 0;
+        // 마우스 Y위치
+        var mouseY = 0;
+        // 스피드 변화 
+        var speedChange;
+        // 몸길이
+        var score = 0;
+        // 사과 먹었는지
+        var isApple = false;
+        // 시작 시간
+        var startTime = 0;
+        // 끝난 시간
+        var endTime = 0;
+        // 경과 시간
+        var elapsedSeconds = 0;
+        // 장애물 생성 주기
+        var spawnTime = 5000;
+
+        // 뱀 클래스
+        class PlayerBodyObject {
+            constructor() {
+                this.body = [];
+                this.PlayerPosX = canvas.width / 2;
+                this.PlayerPosY = canvas.height / 2;
+                this.dirX = 0;
+                this.dirY = 0;
+                this.speed = 2;
+                this.PlayerRadius = 10;
+                this.bodySpacing = this.PlayerRadius * 2 / 2;
+            }
+            init(){
+                this.bodycount = 2;
+                for(var i= 0; i< this.bodycount; i++){
+                    const bodyPart = new PlayerBodyObject();
+                    this.body.push(bodyPart);
+                }
+            }
+            UpdatePosition() {
+                this.dirX = mouseX - this.PlayerPosX;
+                this.dirY = mouseY - this.PlayerPosY;
+
+                let scalar = Math.sqrt(this.dirX * this.dirX + this.dirY * this.dirY);
+
+                this.dirX /= scalar;
+                this.dirY /= scalar;
+
+                if (scalar > 20) {
+                    this.PlayerPosX += this.dirX * this.speed;
+                    this.PlayerPosY += this.dirY * this.speed;
+                }
+            }
+            drawPlayer() {
+                ctx.beginPath();
+                ctx.arc(this.PlayerPosX, this.PlayerPosY, this.PlayerRadius, 0, 2 * Math.PI);
+                ctx.fillStyle = "Blue";
+                ctx.fill();
+                ctx.closePath();
+            }
+        }
+
+        // 사과 클래스
+        class AppleObject{
+            constructor(){
+                this.ApplePosX = 0;
+                this.ApplePosY = 0;
+                this.AppleRadius = 10;
+            }
+            drawApple(){
+                ctx.beginPath();
+                ctx.arc(this.ApplePosX, this.ApplePosY, this.AppleRadius, 0, Math.PI * 2);
+                ctx.fillStyle = 'Red';
+                ctx.fill();
+                ctx.closePath();
+            }
+        }
+        
+        // 장애물 클래스
+        class Shapes {
+            constructor(){
+                this.shapes = [];
+                this.Radius = 10;
+                this.x = Math.random() * canvas.width; 
+                this.y = Math.random() * canvas.height; 
+                this.speed = 1 + Math.floor(Math.random() * 3);
+                this.degree = Math.PI / 360;
+                this.angle = 0; 
+                this.shapeType = Math.floor(Math.random() * 3);
+                this.direction = Math.floor(Math.random() * 4) + 1;
+
+                if (this.direction === 1 || this.direction === 2) {
+                    // 동쪽 또는 서쪽에서 시작
+                    this.x = (this.direction === 1) ? 0 : canvas.width;
+                    this.y = Math.random() * canvas.height;
+                } else {
+                    // 남쪽 또는 북쪽에서 시작
+                    this.x = Math.random() * canvas.width;
+                    this.y = (this.direction === 3) ? canvas.height : 0;
+                }
+            }
+            draw() {
+                if (this.shapeType === 0) {
+                    ctx.save(); 
+                    ctx.translate(this.x, this.y); 
+                    ctx.rotate(this.angle);
+                    ctx.beginPath();
+                    ctx.arc(0, 0, this.Radius, 0, 2 * Math.PI);
+                    ctx.fillStyle = "Purple";
+                    ctx.fill();
+                    ctx.closePath();
+                    ctx.restore(); 
+                } 
+                else if (this.shapeType === 1) 
+                {
+                    ctx.save();
+                    ctx.translate(this.x, this.y);
+                    ctx.rotate(this.angle); 
+                    ctx.fillStyle = "Green";
+                    ctx.fillRect(-12.5, -12.5, 25, 25); 
+                    ctx.restore();
+                } 
+                else if (this.shapeType === 2) 
+                {
+                    ctx.save();
+                    ctx.translate(this.x, this.y);
+                    ctx.rotate(this.angle);
+                    ctx.beginPath();
+                    ctx.moveTo(0, 10);
+                    ctx.lineTo(10, -10);
+                    ctx.lineTo(-10, -10);
+                    ctx.fillStyle = "Black";
+                    ctx.fill();
+                    ctx.closePath();
+                    ctx.restore();
+                }
+            }
+            update() {
+                if (this.direction === 1) {
+                    // 동쪽으로 이동
+                    this.x += this.speed;
+                } else if (this.direction === 2) {
+                    // 서쪽으로 이동
+                    this.x -= this.speed;
+                } else if (this.direction === 3) {
+                    // 남쪽으로 이동
+                    this.y += this.speed;
+                } else {
+                    // 북쪽으로 이동
+                    this.y -= this.speed;
+                }
+
+                this.angle += this.degree;
+
+                if (this.x < -20 || this.x > canvas.width + 20 || this.y < -20 || this.y > canvas.height + 20) {
+                    this.direction = Math.floor(Math.random() * 4) + 1;
+                    if (this.direction === 1 || this.direction === 2) {
+                        this.x = (this.direction === 1) ? -20 : canvas.width + 20;
+                        this.y = Math.random() * canvas.height;
+                    } else {
+                        this.x = Math.random() * canvas.width;
+                        this.y = (this.direction === 3) ? -20 : canvas.height + 20;
+                    }
+                    this.angle = 0;
+                }
+            }
+        }
+
+        // snake 및 apple 생성자
+        const snake = new PlayerBodyObject();
+        const apple = new AppleObject();
+        const shape = new Shapes();
+
+        // 머리 생성
+        snake.body.push(snake);
+
+        // 몸통 생성
+        snake.init();
+
+        // 사과의 랜덤 위치 설정
+        randomApplePos();
+
+        // 게임 시작
+        function startGame(){
+            // 시간초 출력
+            startTime = new Date().getTime() / 1000;
+            setInterval(updateTime , 10);
+            
+            // 게임 루프 실행
+            gameLoop();
+        }
+
+        // 게임 시간 업데이트 
+        function updateTime(){
+            if(startTime > 0){
+                endTime = new Date().getTime() / 1000;
+                elapsedSeconds = (endTime - startTime).toFixed(2);
+                document.getElementById("timeDisplay").textContent = elapsedSeconds;
+            }
+        }
+        
+        // 마우스 이동 프레임마다 뱀 그리기
+        document.addEventListener("mousemove", (e) => {
+            const rect = canvas.getBoundingClientRect();
+            mouseX = e.clientX - rect.left;
+            mouseY = e.clientY - rect.top;
+        });
+
+        // 스페이스바 누르면 속도가 4가 됐다가 3초 후 2로 초기화
+        document.addEventListener("click", (e) => {
+            snake.speed = 4;
+            clearTimeout(speedChange);
+            speedChange = setTimeout(() => {
+                snake.speed = 2;
+            }, 3000);
+        });
+
+        // 뱀 그리기
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            for (let i = snake.body.length - 1; i >= 0; i--) {
+                if (i === 0) {
+                    snake.body[i].UpdatePosition();
+                } else {
+                    // 이전 몸통의 위치를 저장
+                    var prevPosX = snake.body[i - 1].PlayerPosX;
+                    var prevPosY = snake.body[i - 1].PlayerPosY;
+
+                    // 이전 몸통과의 거리를 고려하여 몸통 위치 조절
+                    var angle = Math.atan2(prevPosY - snake.body[i].PlayerPosY, prevPosX - snake.body[i].PlayerPosX);
+                    snake.body[i].PlayerPosX = prevPosX - Math.cos(angle) * snake.bodySpacing;
+                    snake.body[i].PlayerPosY = prevPosY - Math.sin(angle) * snake.bodySpacing;
+                }
+                snake.body[i].drawPlayer();
+            }
+
+            // 머리가 몸통에 닿거나, 캔버스 영역 끝에 닿았는지 체크, 닿았다면 게임종료
+            checkBody();
+            checkCanvas();
+            // 몸통이 장애물에 닿았는지 체크
+            checkObstacle();
+
+            // 사과 그리기
+            apple.drawApple();
+
+            // 사과를 먹었을 때 
+            if (checkApple(snake.PlayerPosX, snake.PlayerPosY, snake.PlayerRadius, 
+                apple.ApplePosX, apple.ApplePosY, apple.AppleRadius)) 
+            {
+                // 점수 증가
+                score++;
+                document.getElementById("scoreDisplay").textContent = score;
+
+                // 애플을 먹으면 머리가 몸통에 닿았는지 체크 활성화
+                isApple = true;
+
+                // 사과 위치 랜덤으로 이동
+                randomApplePos();
+
+                // 몸통 추가
+                const newBodyPart = new PlayerBodyObject();
+                snake.body.push(newBodyPart);
+            }
+        }
+
+        // 장애물 생성
+        for(var i = 0; i < 5; i++){
+            const obstacle = new Shapes();
+            shape.shapes.push(obstacle);
+        }
+        
+        // 장애물 그리기
+        function drawShape(){
+            for(var i = 0; i < shape.shapes.length; i++){
+                shape.shapes[i].draw();
+                shape.shapes[i].update();
+            }
+        }
+
+        // 뱀과 사과가 만났는지 체크
+        function checkApple(PPX, PPY, PR, APX, APY, AR) {
+            var dx = PPX - APX;
+            var dy = PPY - APY;
+            var distance = Math.sqrt(dx * dx + dy * dy);
+
+            return distance < PR + AR;
+        }
+        
+        // 머리가 몸통에 닿았는지 체크
+        function checkBody() {
+            if(isApple){
+                for (let i = 3; i < snake.body.length; i++) {
+                    if (checkApple(snake.PlayerPosX, snake.PlayerPosY, snake.PlayerRadius,
+                        snake.body[i].PlayerPosX, snake.body[i].PlayerPosY, snake.PlayerRadius)) {
+                        resetGame();
+                        break;
+                    }
+                }
+            }
+        }
+
+        // 몸통이 장애물에 닿았는지 체크
+        function checkObstacle() {
+            for (var i = 0; i < shape.shapes.length; i++) {
+                for (var j = 0; j < snake.body.length; j++) {
+                    if (checkApple(snake.body[j].PlayerPosX, snake.body[j].PlayerPosY, snake.PlayerRadius,
+                        shape.shapes[i].x, shape.shapes[i].y, shape.shapes[i].Radius)) {
+                        resetGame();
+                        return;
+                    }
+                }
+            }
+        }
+        
+        // 캔버스 영역에 닿았는지 체크
+        function checkCanvas(){
+            if (snake.PlayerPosX - snake.PlayerRadius < 0 || snake.PlayerPosX + snake.PlayerRadius > canvas.width ||
+                snake.PlayerPosY - snake.PlayerRadius < 0 || snake.PlayerPosY + snake.PlayerRadius > canvas.height) {
+                resetGame();
+            }
+        }
+
+        // 사과를 랜덤 위치로 이동
+        function randomApplePos(){
+            apple.ApplePosX = Math.random() * (canvas.width - 2 * apple.AppleRadius) + apple.AppleRadius;
+            apple.ApplePosY = Math.random() * (canvas.height - 2 * apple.AppleRadius) + apple.AppleRadius;
+        }
+
+        // 게임 종료 시 페이지 리로드
+        function resetGame(){
+            alert("게임 종료 !! \n최종 뱀 길이 : "+score+"\n총 시간 : "+elapsedSeconds);
+            location.reload();
+        }
+
+        // 게임 루프
+        function gameLoop(){
+            draw();
+            drawShape();
+            requestAnimationFrame(gameLoop);
+        }
+
+        window.addEventListener("load",startGame);
+    </script>
+</body>
+</html>
