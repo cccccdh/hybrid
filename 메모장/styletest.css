@@ -1,1 +1,97 @@
+.total {
+    display: flex;
+    width: 320px;
+    height: 600px;
+    border: 1px solid black;
+}
+p{
+    color: red;
+}
+.section0, .section1{
+    width: 320px;
+    background-image: url(img/background_1.png);
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: 100% ;
+}
+.section0{
+    .joinForm {
+        align-items: center;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        margin: 50px;
+        padding: 0;
+    
+        #newUsername, #newPassword{
+            height: 30px;
+            text-align: center;
+            background: none;
+            border: 0;
+            border-bottom: 1px solid black;
+            font-size: 15px;
+        }
+        #joinButton{
+            width: 100px;
+            height: 25px;;
+            text-align: center;
+            font-size: 15px;
+            border: 0;
+            border-radius: 15px;
+            background-color: #ffecfe;
+        }
+    }
+}
+.section1{
+    .loginForm {
+        align-items: center;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        margin: 50px;
+        padding: 0;
+    
+        #username, #password{
+            height: 30px;
+            text-align: center;
+            background: none;
+            border: 0;
+            border-bottom: 1px solid black;
+            font-size: 15px;
+        }
+        #loginButton, #generate {
+            width: 100px;
+            height: 25px;;
+            text-align: center;
+            font-size: 15px;
+            border: 0;
+            border-radius: 15px;
+            background-color: #ffecfe;
+        }
+    }
+}
+.section2{
+    display: flex;
+    background-image: url(img/background_2.png);
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: 100% 100%;          
 
+    .write, .read{
+        display: inline-flex;
+        flex-direction: column;
+        justify-content: center;    
+        align-items: center;
+        padding: 28px;
+        margin-top: 520px;
+    }
+    .writen, .readen{
+        width: 100px;
+        height: 30px;;
+        text-align: center;
+        font-size: 15px;
+        border: 0;
+        border-radius: 15px;
+        background-color: #ffecfe;
+    }
+}    
